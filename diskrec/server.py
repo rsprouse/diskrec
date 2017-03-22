@@ -4,7 +4,6 @@
 # A simple stream-to-disk audio recorder.
 
 import os
-import subprocess
 from diskrec.streamer import DiskStreamer
 
 if os.name == 'nt':
