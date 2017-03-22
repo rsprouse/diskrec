@@ -21,7 +21,7 @@ class DiskrecServer(object):
         self.streamer = None
         if os.name == 'nt':
             self._open_win()
-        elif os.name == 'posix'
+        elif os.name == 'posix':
             self._open_posix()
 
     def listen(self):
@@ -29,7 +29,7 @@ class DiskrecServer(object):
         while True:
             if os.name == 'nt':
                 msg = self._read_win()
-            elif os.name == 'posix'
+            elif os.name == 'posix':
                 msg = self._read_posix()
             if msg.startswith('STARTREC '):
                 nchan, fname = msg.replace('STARTREC ', '').split()
