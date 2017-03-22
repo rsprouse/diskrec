@@ -9,7 +9,7 @@ import wave
 
 class DiskStreamer(object):
     '''A class for streaming microphone audio to disk.'''
-    def __init__(self, wavname, width=2, fmt=pyaudio.paInt16, channels=2, rate=44100, separate=True):
+    def __init__(self, wavname, width=2, fmt=pyaudio.paInt16, channels=2, rate=48000):
 # TODO: is it necessary to have both width and fmt?
         p = pyaudio.PyAudio()
 
