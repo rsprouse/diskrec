@@ -18,7 +18,15 @@ class DiskrecClient(object):
     '''A class for communicating with a DiskrecServer.'''
     def __init__(self):
         if os.name == 'nt':
-            self.pipeout = win32file.CreateFile(pipename, win32file.GENERIC_WRITE, 0, None, win32file.OPEN_EXISTING, 0, None)
+            self.pipeout = win32file.CreateFile(
+                pipename,
+                win32file.GENERIC_WRITE | win32file.GENERIC_READ,
+                0,
+                None,
+                win32file.OPEN_EXISTING,
+                0,
+                None
+            )
      #       win32pipe.ConnectNamedPipe(self.pipeout, None)
         elif os.name == 'posix':
             self.pipeout = os.open(pipename, os.O_WRONLY)

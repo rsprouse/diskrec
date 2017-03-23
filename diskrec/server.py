@@ -4,6 +4,7 @@
 # A simple stream-to-disk audio recorder.
 
 import os
+import threading
 from diskrec.streamer import DiskStreamer
 
 if os.name == 'nt':
@@ -14,7 +15,7 @@ elif os.name == 'posix':
 else:
     raise 'DiskrecServer not implemented for {}'.format(os.name)
 
-class DiskrecServer(object):
+class DiskrecServer(threading.Thread):
     '''A server for receiving requests to make direct-to-disk recordings.'''
     def __init__(self):
         self.pipename = pipename
@@ -28,7 +29,9 @@ class DiskrecServer(object):
 
     def listen(self):
         '''Listen for messages and act accordingly.'''
+        #win32pipe.ConnectNamedPipe(self.pipein, None)
         while True:
+            msg = ''
             try:
                 if os.name == 'nt':
                     msg = self._read_win()
@@ -36,8 +39,8 @@ class DiskrecServer(object):
                     msg = self._read_posix()
             except:
                 pass
-            print('read {}'.format(msg))
-            if msg.startswith('STARTREC '.encode('utf-8')):
+            msg = msg.decode('utf-8')
+            if msg.startswith('STARTREC '):
                 nchan, fname = msg.replace('STARTREC ', '').split()
                 self.streamer = DiskStreamer(fname, channels=int(nchan))
                 self.streamer.start_stream()
@@ -50,7 +53,6 @@ class DiskrecServer(object):
 
     def _open_win(self):
         '''Open the pipe on a Windows system.'''
-        print('_open_win')
         openmode = win32pipe.PIPE_ACCESS_DUPLEX
         pipemode = win32pipe.PIPE_TYPE_MESSAGE | \
                    win32pipe.PIPE_READMODE_MESSAGE | \
@@ -69,11 +71,11 @@ class DiskrecServer(object):
                 defaulttimeout,
                 securityattrib,
             )
-            win32pipe.ConnectNamedPipe(self.pipein, None)
+            if self.pipein == win32file.INVALID_HANDLE_VALUE:
+                raise 'Error calling CreateNamedPipe.'
         except:
 # TODO:
             raise
-        print('opened')
 
     def _open_posix(self):
         '''Open the pipe on a posix system.'''
@@ -84,11 +86,7 @@ class DiskrecServer(object):
         self.pipein = os.open(self.pipename, os.O_RDONLY | os.O_NONBLOCK)
 
     def _read_win(self):
-        print('reading')
         res, data = win32file.ReadFile(self.pipein, self.inbufsize)
-        print('read')
-        print('result ', res)
-        print('data ', data)
         return data
 
     def _read_posix(self):
@@ -96,5 +94,13 @@ class DiskrecServer(object):
         return resp
 
     def close(self):
-# TODO: posix vs. win
+        if os.name == 'nt':
+            self._close_win()
+        elif os.name == 'posix':
+            self._close_posix()
+
+    def _close_win(self):
+        win32file.CloseHandle(self.pipein)
+
+    def _close_posix(self):
         os.close(self.pipein)

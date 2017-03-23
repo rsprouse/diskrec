@@ -14,25 +14,15 @@ class DiskStreamer(object):
         p = pyaudio.PyAudio()
 
         basename = os.path.splitext(wavname)[0]
-        if separate:     # Save channels to separate files.
-            wav = [None] * channels
-            for c in range(0,channels):
-                wf = wave.open('{}.ch{:d}.wav'.format(basename, c), 'wb')
-                wf.setnchannels(1)
-                wf.setsampwidth(p.get_sample_size(fmt))
-                wf.setframerate(rate)
-                wav[c] = wf
-        else:
-            wf = wave.open('{}.wav'.format(basename), 'wb')
-            wf.setnchannels(channels)
-            wf.setsampwidth(p.get_sample_size(fmt))
-            wf.setframerate(rate)
-            wav = [wf]
+        wf = wave.open(u'{}.wav'.format(basename.decode('utf-8')), 'wb')
+        wf.setnchannels(channels)
+        wf.setsampwidth(p.get_sample_size(fmt))
+        wf.setframerate(rate)
+        wav = [wf]
 
         self.channels = channels
         self.p = p
         self.wav = wav
-        self.separate = separate   # Save channels to separate files.
 
         def callback(in_data, frame_count, time_info, status):
             for idx in range(len(self.wav)):
