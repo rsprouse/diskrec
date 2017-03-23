@@ -4,7 +4,10 @@
 import os
 from diskrec.server import DiskrecServer
 
+print('opening')
 server = DiskrecServer()
+print('listening')
+server.listen()
 
 
 

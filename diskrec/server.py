@@ -17,8 +17,9 @@ else:
 class DiskrecServer(object):
     '''A server for receiving requests to make direct-to-disk recordings.'''
     def __init__(self):
-        self.buffersize = 4096
+        self.pipename = pipename
         self.streamer = None
+        self.buffersize = 4096
         if os.name == 'nt':
             self._open_win()
         elif os.name == 'posix':
@@ -31,7 +32,8 @@ class DiskrecServer(object):
                 msg = self._read_win()
             elif os.name == 'posix':
                 msg = self._read_posix()
-            if msg.startswith('STARTREC '):
+            print('read {}'.format(msg))
+            if msg.startswith('STARTREC '.encode('utf-8')):
                 nchan, fname = msg.replace('STARTREC ', '').split()
                 self.streamer = DiskStreamer(fname, channels=int(nchan))
                 self.streamer.start_stream()
@@ -46,7 +48,7 @@ class DiskrecServer(object):
         '''Open the pipe on a Windows system.'''
         try:
             self.handle = win32pipe.CreateNamedPipe(
-                pipename,
+                self.pipename,
                 openmode,
                 pipemode,
                 maxinstances,
@@ -55,17 +57,25 @@ class DiskrecServer(object):
                 defaulttimeout,
                 securityattrib,
             )
+        except:
+# TODO:
+            pass
 
     def _open_posix(self):
         '''Open the pipe on a posix system.'''
         try:
-            os.mkfifo(pipe_name)
+            os.mkfifo(self.pipename)
         except FileExistsError:
             pass
-        self.pipein = open(pipe_name, os.O_RDONLY)
+        self.pipein = os.open(self.pipename, os.O_RDONLY | os.O_NONBLOCK)
 
     def _read_win(self):
         resp = win32file.ReadFile(self.pipein, self.buffersize)
+        return resp
+
+    def _read_posix(self):
+        resp = os.read(self.pipein, self.buffersize)
+        return resp
 
     def close(self):
         close(self.pipein)

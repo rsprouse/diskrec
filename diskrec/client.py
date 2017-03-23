@@ -16,7 +16,7 @@ else:
 class DiskrecClient(object):
     '''A class for communicating with a DiskrecServer.'''
     def __init__(self):
-        self.pipeout = open(pipe_name, os.O_WRONLY)
+        self.pipeout = os.open(pipename, os.O_WRONLY)
 
     def write(self, msg):
         os.write(self.pipeout, msg)
